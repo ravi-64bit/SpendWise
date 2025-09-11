@@ -13,4 +13,4 @@
 
 ## Coming soon 
 
-**Suggesstions at [ravick@myyahoo.com](mailto:ravick@myyahoo.com)**
+**Suggestions at [ravick@myyahoo.com](mailto:ravick@myyahoo.com)**
