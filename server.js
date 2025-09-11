@@ -1,38 +1,57 @@
+// Import required packages
 const express = require('express');
-const https = require('https');
-const fs = require('fs');
+const mongoose = require('mongoose');
+const dotenv = require('dotenv');
+const cors = require('cors');
 const path = require('path');
-const httpsLocalhost = require('https-localhost')();
 
+// Load environment variables from .env file
+dotenv.config();
+
+// Initialize express app
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Serve static files
-app.use('/css', express.static(path.join(__dirname, 'public/css')));
-app.use('/js', express.static(path.join(__dirname, 'public/js')));
+// Middleware
+app.use(cors()); // Enable Cross-Origin Resource Sharing
+app.use(express.json()); // Parse JSON bodies
+app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
 
-// Set view engine
+// Set EJS as the view engine
 app.set('view engine', 'ejs');
+// Set the views directory
 app.set('views', path.join(__dirname, 'views'));
 
-// Routes
+// Serve static files from the 'public' directory
+app.use(express.static(path.join(__dirname, 'public')));
+
+// --- Database Connection ---
+const MONGODB_URI = process.env.MONGODB_URI;
+
+mongoose.connect(MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+.then(() => {
+  console.log('Successfully connected to MongoDB Atlas!');
+})
+.catch((error) => {
+  console.error('Error connecting to MongoDB Atlas:', error);
+  process.exit(1); // Exit process with failure
+});
+
+
+// --- Routes ---
+// API routes for transactions
+const transactionRoutes = require('./routes/transactions');
+app.use('/api/transactions', transactionRoutes);
+
+// View route for the main application
 app.get('/', (req, res) => {
-    res.render('index');
+    res.render('index', { title: 'Cosmic UPI Tracker' });
 });
 
-app.get('/pay', (req, res) => {
-    res.render('pay');
+// --- Server Startup ---
+app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`);
 });
-
-async function startServer() {
-    // Get certificates for HTTPS
-    const certs = await httpsLocalhost.getCerts();
-    
-    // Create HTTPS server
-    https.createServer(certs, app).listen(PORT, () => {
-        console.log(`Secure server running on https://localhost:${PORT}`);
-    });
-}
-
-startServer().catch(console.error);
-
