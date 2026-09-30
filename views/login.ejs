@@ -1,0 +1,8 @@
+<%- include('partials/head') %>
+        <h2>Login to SpendWise</h2>
+        <form action="/login" method="POST" class="card">
+            <label for="passPhrase" class="field-label">Enter Passphrase</label>
+            <input type="password" id="passPhrase" name="passPhrase" class="field-input" required>
+            <button type="submit" class="btn">Login</button>
+        </form>
+<%- include ('partials/foot') %>

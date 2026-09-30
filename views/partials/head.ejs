@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= typeof title !== 'undefined' ? title: 'SpendWise' %></title>
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="/js/html5-qrcode.min.js"></script>
+    <link rel="icon" href="/images/logo.svg">
+</head>
+<body>
+    <header>
+        <h1>SpendWise</h1>
+        <% if (currentPath !== '/' && currentPath !== '/login') {%>
+            <a href="/" class="link">&larr; Home</a> 
+        <% } %>
+    </header>
+    <main class="container">

@@ -1,0 +1,26 @@
+<%- include('partials/head') %>
+        <form action="/addIncome" method="POST" class="card">
+            <label for="amount" class="field-label">Enter amount</label>
+            <input id="amount" type="number" name="amount" class="field-input" required>
+
+            <label for="account" class="field-label">Select Account</label>
+            <select id="account" name="account" class="field-select" required>
+                <option value="0">General</option>
+                <option value="1">Personal</option>
+            </select>
+
+            <label for="from" class="field-label">From</label>
+            <input id="from" type="text" name="from" class="field-input" required>
+
+            <label for="mode" class="field-label">Mode</label>
+            <select id="mode" name="mode" class="field-select">
+                <option value="0">UPI</option>
+                <option value="1">Cash</option>
+            </select>
+
+            <label for="note" class="field-label">Note</label>
+            <input id="note" type="text" name="note" class="field-input">
+
+            <button type="submit" class="btn">Submit</button>
+        </form>
+<%- include('partials/foot') %>

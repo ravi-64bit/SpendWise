@@ -1,38 +1,144 @@
-const express = require('express');
-const https = require('https');
-const fs = require('fs');
-const path = require('path');
-const httpsLocalhost = require('https-localhost')();
+const express=require('express');
+const bodyParser=require('body-parser');
+const {
+    makeLink,
+    requireAuth,
+    addTransaction,
+    getTransactions,
+    getBalance,
+    getAllBalances
+} = require('./handling.js');
+const cookieParser = require('cookie-parser');
 
-const app = express();
-const PORT = process.env.PORT || 3000;
+// app configs
 
-// Serve static files
-app.use('/css', express.static(path.join(__dirname, 'public/css')));
-app.use('/js', express.static(path.join(__dirname, 'public/js')));
+const app=express();
+app.set('view engine','ejs');
+app.use(bodyParser.urlencoded({extended:true}));
+app.use(express.static('public'));
+app.use(cookieParser(process.env.COOKIE_SECRET))
 
-// Set view engine
-app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
-
-// Routes
-app.get('/', (req, res) => {
-    res.render('index');
+app.use((req,res,next)=>{
+    res.locals.currentPath= req.path;
+    next();
 });
 
-app.get('/pay', (req, res) => {
-    res.render('pay');
+// index
+app.get('/',requireAuth,async (req,res)=>{
+    const user = req.signedCookies.auth_session;
+    const {generalAccountBalance, personalAccountBalance}  = await getAllBalances(user); 
+    res.render('index', {generalAccountBalance, personalAccountBalance});
 });
 
-async function startServer() {
-    // Get certificates for HTTPS
-    const certs = await httpsLocalhost.getCerts();
+// UPI payments
+app.get('/pay',requireAuth,(req,res)=>{
+    const upiId=req.query.upiId || '';
+    const amount=req.query.amount || '';
+    res.render('pay', {upiId, amount, title:'Pay'});
+});
+
+app.post('/pay',requireAuth, async (req,res)=>{
+    try{
+        const {amount, upiId, note} = req.body;
+        const account=req.body.account === '1';
+        const targetUrl = makeLink(amount, upiId, note);
+        const user=req.signedCookies.auth_session;
+        await addTransaction(amount, account, user, upiId, note, 0, 0);
+        res.redirect(targetUrl);
+    } catch (err){
+        console.log(err);
+        res.status(500).send("couldn't save transaction!");
+    }
+});
+
+// other transactions
+app.get('/payCash', requireAuth, (req,res)=>{
+    res.render('cashTransaction',{title:'Add cash Transaction'});
+});
+
+app.post('/paycash', requireAuth,async (req,res)=>{
+    const{amount, description, note} = req.body;
+    const account=req.body.account === "1";
+    const user=req.signedCookies.auth_session;
+    const result = await addTransaction(amount, account, user, description, note, 1, 0);
+    console.log(result);
+    res.redirect('/');
+}); 
+
+// add income transactions
+app.get('/addIncome', requireAuth, (req,res)=>{
+    res.render ('addIncome', {title:'Add Income'});
+});
+
+app.post('/addIncome', requireAuth,async (req,res)=>{
+    const {amount, from, note} = req.body;
+    const account = req.body.account === "1";
+    const mode=req.body.mode === "1";
+    const user=req.signedCookies.auth_session;
+    const result = await addTransaction(amount, account, user, from, note, mode, 1);
+    console.log(result);
+    res.redirect('/');
+});
+
+//transaction lists
+app.get('/transactions',requireAuth, async (req,res)=>{
+    res.render('transactions',{title:'transactions'});
+});
+
+app.post('/transactions', requireAuth, async(req,res)=>{
+    let account=req.body.account === "1";
+    let user=req.signedCookies.auth_session;
+    let transactionList=await getTransactions(account, user);
+    let balance = await getBalance(account, user);
+    res.render('transactions',{title:'transactions', 
+                                transactions:transactionList, 
+                                accountType: account==0 ? 'General Account' : 'Personal Account', 
+                                balance: balance ? balance : 0});
+});
+
+// login and session
+app.get('/login',(req,res)=>{
+    res.render('login',{title:'Login'});
+});
+
+app.post('/login',(req,res)=>{
     
-    // Create HTTPS server
-    https.createServer(certs, app).listen(PORT, () => {
-        console.log(`Secure server running on https://localhost:${PORT}`);
-    });
-}
+    const passPhrase=req.body.passPhrase;
+    if(passPhrase==process.env.PHRASE_1){
+        res.cookie("auth_session", "ravi",{
+            httpOnly: true,
+            signed: true,
+            maxAge: 30 * 24 * 60 * 60 * 1000,
+            sameSite: 'lax',
+            secure: false
+        });
+        return res.redirect('/');
+    }
 
-startServer().catch(console.error);
+    if (passPhrase == process.env.PHRASE_2){
+        res.cookie("auth_session", "other",{
+            httpOnly: true,
+            signed: true,
+            maxAge: 30 * 24 * 60 * 60 * 1000,
+            sameSite: 'lax',
+            secure: false
+        });
+        return res.redirect('/')
+    }
+    res.status(401).send('invalid passphrase <a href="/login"> try again </a>');
+});
 
+
+app.get('/logout', requireAuth, (req,res)=>{
+    res.clearCookie('auth_session');
+    res.redirect('/login')
+})
+
+
+//port
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, ()=>{
+    console.log('Server is running on port'+ PORT);
+});
+
+module.exports = app

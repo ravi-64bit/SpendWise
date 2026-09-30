@@ -1,0 +1,55 @@
+<%- include('partials/head') %>
+    <form action="/transactions" method="POST" class="card">
+        <fieldset class="filter-form">
+            <legend>Account</legend>
+
+            <label for="general" class="radio-label">
+                <input type="radio" name="account" id="general" value="0" checked>
+                General
+            </label>
+
+            <label for="personal" class="radio-label">
+                <input type="radio" name="account" id="personal" value="1">
+                Personal
+            </label>
+
+            <button type="submit" class="btn">Fetch</button>
+        </fieldset>
+    </form>
+
+    <%if( typeof accountType !== 'undefined') { %>
+        <p>Current balance in <%=accountType%> : <%= balance ? balance.balance : 0%></p>
+    <%}%>
+
+    <div class="table-wrap">
+        <% if (typeof transactions !== 'undefined') { %>
+            <table class="transactions-table">
+                <caption class="sr-only">Transaction history</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">S.No</th>
+                        <th scope="col">To/From</th>
+                        <th scope="col">Amount</th>
+                        <th scope="col">Date</th>
+                        <th scope="col">Note</th>
+                        <th scope="col">Mode</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% transactions.forEach((row, index) => { %>
+                        <tr>
+                            <td><%=index+1%></td>
+                            <td><%=row.party%></td>
+                            <td><%=row.amount%></td>
+                            <td><%=new Date(row.date).toLocaleString("en-IN",{timeZone:"Asia/Kolkata"})%></td>
+                            <td><%=row.note%></td>
+                            <td><%= row.mode ? 'UPI' : 'Cash' %></td>
+                        </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+        <% } else { %>
+            <p class="empty-state">Select an account and hit Fetch to see transactions.</p>
+        <% } %>
+    </div>
+<%- include('partials/foot') %>
