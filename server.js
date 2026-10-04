@@ -1,5 +1,6 @@
 const express=require('express');
 const bodyParser=require('body-parser');
+const cookieParser = require('cookie-parser');
 const {
     makeLink,
     requireAuth,
@@ -8,7 +9,9 @@ const {
     getBalance,
     getAllBalances
 } = require('./handling.js');
-const cookieParser = require('cookie-parser');
+
+const asyncHandler = require ('./asyncHandler.js');
+const { registerExpressWebhook } = require('node-telegram-bot-api');
 
 // app configs
 
@@ -23,12 +26,23 @@ app.use((req,res,next)=>{
     next();
 });
 
+app.use((err, req, res, next)=>{
+    console.error(err);
+
+    if (req.accepts('html')){
+        res.status(500).send('something wrong please try again!');
+    }
+    else{
+        res.status(500).json({error: 'something wrong!'});
+    }
+});
+
 // index
-app.get('/',requireAuth,async (req,res)=>{
+app.get('/',requireAuth,asyncHandler(async (req,res)=>{
     const user = req.signedCookies.auth_session;
     const {generalAccountBalance, personalAccountBalance}  = await getAllBalances(user); 
     res.render('index', {generalAccountBalance, personalAccountBalance});
-});
+}));
 
 // UPI payments
 app.get('/pay',requireAuth,(req,res)=>{
@@ -37,7 +51,7 @@ app.get('/pay',requireAuth,(req,res)=>{
     res.render('pay', {upiId, amount, title:'Pay'});
 });
 
-app.post('/pay',requireAuth, async (req,res)=>{
+app.post('/pay',requireAuth, asyncHandler( async (req,res)=>{
     try{
         const {amount, upiId, note} = req.body;
         const account=req.body.account === '1';
@@ -49,28 +63,29 @@ app.post('/pay',requireAuth, async (req,res)=>{
         console.log(err);
         res.status(500).send("couldn't save transaction!");
     }
-});
+}));
 
 // other transactions
-app.get('/payCash', requireAuth, (req,res)=>{
-    res.render('cashTransaction',{title:'Add cash Transaction'});
-});
+app.get('/addTransaction', requireAuth, asyncHandler( async (req,res)=>{
+    res.render('addTransaction',{title:'Add cash Transaction'});
+}));
 
-app.post('/paycash', requireAuth,async (req,res)=>{
+app.post('/addTransaction', requireAuth,asyncHandler(async (req,res)=>{
     const{amount, description, note} = req.body;
     const account=req.body.account === "1";
+    const mode = req.body.mode === "1";
     const user=req.signedCookies.auth_session;
-    const result = await addTransaction(amount, account, user, description, note, 1, 0);
+    const result = await addTransaction(amount, account, user, description, note, mode, 0);
     console.log(result);
     res.redirect('/');
-}); 
+})); 
 
 // add income transactions
 app.get('/addIncome', requireAuth, (req,res)=>{
     res.render ('addIncome', {title:'Add Income'});
 });
 
-app.post('/addIncome', requireAuth,async (req,res)=>{
+app.post('/addIncome', requireAuth,asyncHandler(async (req,res)=>{
     const {amount, from, note} = req.body;
     const account = req.body.account === "1";
     const mode=req.body.mode === "1";
@@ -78,14 +93,14 @@ app.post('/addIncome', requireAuth,async (req,res)=>{
     const result = await addTransaction(amount, account, user, from, note, mode, 1);
     console.log(result);
     res.redirect('/');
-});
+}));
 
 //transaction lists
-app.get('/transactions',requireAuth, async (req,res)=>{
+app.get('/transactions',requireAuth,asyncHandler( async (req,res)=>{
     res.render('transactions',{title:'transactions'});
-});
+}));
 
-app.post('/transactions', requireAuth, async(req,res)=>{
+app.post('/transactions', requireAuth,asyncHandler( async(req,res)=>{
     let account=req.body.account === "1";
     let user=req.signedCookies.auth_session;
     let transactionList=await getTransactions(account, user);
@@ -94,7 +109,7 @@ app.post('/transactions', requireAuth, async(req,res)=>{
                                 transactions:transactionList, 
                                 accountType: account==0 ? 'General Account' : 'Personal Account', 
                                 balance: balance ? balance : 0});
-});
+}));
 
 // login and session
 app.get('/login',(req,res)=>{
@@ -129,10 +144,10 @@ app.post('/login',(req,res)=>{
 });
 
 
-app.get('/logout', requireAuth, (req,res)=>{
+app.get('/logout', requireAuth, asyncHandler(async (req,res)=>{
     res.clearCookie('auth_session');
     res.redirect('/login')
-})
+}));
 
 
 //port

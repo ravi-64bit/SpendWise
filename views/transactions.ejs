@@ -18,7 +18,7 @@
     </form>
 
     <%if( typeof accountType !== 'undefined') { %>
-        <p>Current balance in <%=accountType%> : <%= balance ? balance.balance : 0%></p>
+        <p>Current balance in <%=accountType%> : <%= balance ? balance.balance.toLocaleString('en-IN') : 0%></p>
     <%}%>
 
     <div class="table-wrap">
@@ -32,20 +32,18 @@
                         <th scope="col">Amount</th>
                         <th scope="col">Date</th>
                         <th scope="col">Note</th>
-                        <th scope="col">Mode</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <% transactions.forEach((row, index) => { %>
+                    <% transactions.forEach((row, index) => {%>
                         <tr>
                             <td><%=index+1%></td>
                             <td><%=row.party%></td>
-                            <td><%=row.amount%></td>
+                            <td><font color="<%=row.type == 0 ? 'red' : 'green'%>"><b><%=row.amount.toLocaleString('en-IN')%></b></font></td>
                             <td><%=new Date(row.date).toLocaleString("en-IN",{timeZone:"Asia/Kolkata"})%></td>
                             <td><%=row.note%></td>
-                            <td><%= row.mode ? 'UPI' : 'Cash' %></td>
                         </tr>
-                    <% }); %>
+                    <%}); %>
                 </tbody>
             </table>
         <% } else { %>
