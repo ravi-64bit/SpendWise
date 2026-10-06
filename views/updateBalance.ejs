@@ -1,0 +1,20 @@
+<%-include ('partials/head.ejs')%>
+
+    <dl class="balance-card card">
+        <dt>General</dt><dd><%=generalAccountBalance.toLocaleString('en-IN')%></dd>
+        <dt>Personal</dt><dd><%=personalAccountBalance.toLocaleString('en-IN')%></dd>
+        <dt>Total</dt><dd><%=totalBalance.toLocaleString('en-IN')%></dd>
+    </dl>
+    <form action="/updateBalance" method="POST" class="card">
+        <label for="account" class="field-label">Select Account</label>
+        <select id="account" name="account" class="field-select">
+            <option value="0">General</option>
+            <option value="1">Personal</option>
+        </select>
+
+        <label for="newBalance" class="field-label">Enter New Balance : </label>
+        <input id="newBalance" name="newBalance" type="number" placeholder="Enter a number" class="field-input">
+
+        <button type="submit" class="btn">Submit</button>
+    </form>
+<%-include ('partials/foot.ejs')%>

@@ -35,8 +35,8 @@ async function getAllBalances(owner){
     const general = await Balance.findOne({account:0, owner:owner});
     const personal= await Balance.findOne({account:1, owner:owner});
     return{
-        generalAccountBalance: general ? general.balance : 0,
-        personalAccountBalance: personal ? personal.balance : 0
+        generalAccountBalance: general ? Number(general.balance) : 0,
+        personalAccountBalance: personal ? Number(personal.balance) : 0
     }
 
 }
@@ -88,7 +88,8 @@ module.exports = {
     getTransactions,
     checkPassword,
     getBalance,
-    getAllBalances
+    getAllBalances,
+    updateBalance
 }
 
 

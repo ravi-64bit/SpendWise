@@ -7,7 +7,8 @@ const {
     addTransaction,
     getTransactions,
     getBalance,
-    getAllBalances
+    getAllBalances,
+    updateBalance
 } = require('./handling.js');
 
 const asyncHandler = require ('./asyncHandler.js');
@@ -91,7 +92,7 @@ app.post('/addIncome', requireAuth,asyncHandler(async (req,res)=>{
     const mode=req.body.mode === "1";
     const user=req.signedCookies.auth_session;
     const result = await addTransaction(amount, account, user, from, note, mode, 1);
-    console.log(result);
+    //console.log(result);
     res.redirect('/');
 }));
 
@@ -110,6 +111,26 @@ app.post('/transactions', requireAuth,asyncHandler( async(req,res)=>{
                                 accountType: account==0 ? 'General Account' : 'Personal Account', 
                                 balance: balance ? balance : 0});
 }));
+
+//update Balance
+
+app.get('/updateBalance', requireAuth, asyncHandler(async(req,res)=>{
+    const user =  req.signedCookies.auth_session;
+    const {personalAccountBalance, generalAccountBalance} = await getAllBalances(user);
+
+    res.render('updateBalance', {generalAccountBalance, personalAccountBalance, totalBalance: generalAccountBalance+personalAccountBalance});
+
+}));
+
+app.post('/updateBalance', requireAuth, asyncHandler(async(req,res)=>{
+    let account = req.body.account === "1";
+    let {newBalance} = req.body;
+    let user = req.signedCookies.auth_session;
+    await updateBalance(account, user, newBalance);
+    res.redirect('/');
+}));
+
+
 
 // login and session
 app.get('/login',(req,res)=>{
