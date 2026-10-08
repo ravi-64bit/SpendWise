@@ -26,5 +26,4 @@ async function main() {
     console.log(JSON.parse(response));
 }
 
-
 main();

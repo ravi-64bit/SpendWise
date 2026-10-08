@@ -2,8 +2,9 @@
 
   <dl class="balance-card card">
     <dt>Date</dt><dd><%= new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'}) %></dd>
-    <dt>General</dt><dd><%= generalAccountBalance.toLocaleString('en-IN') %></dd>
-    <dt>Personal</dt><dd><%= personalAccountBalance.toLocaleString('en-IN') %></dd>
+    <dt>General Account Balance</dt><dd><%= generalAccountBalance.toLocaleString('en-IN') %></dd>
+    <dt>Personal Account Balance</dt><dd><%= personalAccountBalance.toLocaleString('en-IN') %></dd>
+    <dt>Total Balance</dt><dd><%=totalBalance.toLocaleString('en-IN')%></dd>
   </dl>
 
   <nav class="action-grid">

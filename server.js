@@ -42,7 +42,7 @@ app.use((err, req, res, next)=>{
 app.get('/',requireAuth,asyncHandler(async (req,res)=>{
     const user = req.signedCookies.auth_session;
     const {generalAccountBalance, personalAccountBalance}  = await getAllBalances(user); 
-    res.render('index', {generalAccountBalance, personalAccountBalance});
+    res.render('index', {generalAccountBalance, personalAccountBalance, totalBalance:generalAccountBalance+personalAccountBalance});
 }));
 
 // UPI payments
@@ -111,6 +111,15 @@ app.post('/transactions', requireAuth,asyncHandler( async(req,res)=>{
                                 accountType: account==0 ? 'General Account' : 'Personal Account', 
                                 balance: balance ? balance : 0});
 }));
+
+
+// app.get('/transactions/:account', requireAuth, asyncHandler(async(req,res)=>{
+//     let account = req.params.account;
+//     if(account){
+
+
+//     }
+// }));
 
 //update Balance
 
